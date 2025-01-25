@@ -8,5 +8,5 @@ import (
 
 type Service interface {
 	Get(ctx context.Context, id string) (models.Bin, error)
-	Create(ctx context.Context, content string) (models.Bin, error)
+	Create(ctx context.Context, content models.NewBin) (models.Bin, error)
 }
