@@ -15,6 +15,7 @@ const FIVE_SECONDS = 5 * time.Second
 func NewServer(address string, log *slog.Logger, binService bins.Service) *http.Server {
 	mux := http.NewServeMux()
 
+	mux.Handle("/", http.FileServer(http.Dir("./static")))
 	binRoutes.Register(mux, log, binService)
 
 	handler := middleware.NewLogMiddleware(log)(mux)
