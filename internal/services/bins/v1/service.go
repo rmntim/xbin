@@ -5,16 +5,18 @@ import (
 	"log/slog"
 	"time"
 
+	repo "github.com/rmntim/xbin/internal/repo/bins"
 	"github.com/rmntim/xbin/internal/services/bins"
 	"github.com/rmntim/xbin/internal/services/bins/models"
 )
 
 type Service struct {
-	log *slog.Logger
+	log  *slog.Logger
+	repo repo.Repository
 }
 
-func NewService(ctx context.Context, log *slog.Logger) bins.Service {
-	return &Service{log: log}
+func NewService(ctx context.Context, log *slog.Logger, repo repo.Repository) bins.Service {
+	return &Service{log: log, repo: repo}
 }
 
 func (s *Service) Get(ctx context.Context, id string) (models.Bin, error) {
