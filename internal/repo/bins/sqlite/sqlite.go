@@ -39,7 +39,7 @@ func (r *repository) Get(ctx context.Context, id string) (models.Bin, error) {
 	err := r.db.QueryRowContext(ctx, "SELECT id, content, created_at FROM bins WHERE id = ?", id).Scan(&bin.Id, &bin.Content, &bin.CreatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return models.Bin{}, fmt.Errorf("%w: %w", svcErr.ErrNotFound, err)
+			return models.Bin{}, svcErr.ErrNotFound
 		}
 		return models.Bin{}, fmt.Errorf("could not find bin with id %s: %w", id, err)
 	}
