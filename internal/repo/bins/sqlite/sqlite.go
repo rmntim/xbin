@@ -2,12 +2,13 @@ package sqlite
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log/slog"
 
-	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 	repo "github.com/rmntim/xbin/internal/repo/bins"
 	svcErr "github.com/rmntim/xbin/internal/services/bins/errors"
@@ -55,7 +56,7 @@ func (r *repository) Create(ctx context.Context, newBin models.NewBin) (models.B
 	}
 	defer stmt.Close()
 
-	id, err := uuid.NewRandom()
+	id, err := generateRandomString(8)
 	if err != nil {
 		return models.Bin{}, fmt.Errorf("error creating uuid: %w", err)
 	}
@@ -67,4 +68,25 @@ func (r *repository) Create(ctx context.Context, newBin models.NewBin) (models.B
 	}
 
 	return bin, nil
+}
+
+func generateRandomString(length uint) (string, error) {
+	// Calculate the number of bytes needed
+	byteLength := (length * 6) / 8
+	if (length*6)%8 != 0 {
+		byteLength++
+	}
+
+	// Generate random bytes
+	randomBytes := make([]byte, byteLength)
+	_, err := rand.Read(randomBytes)
+	if err != nil {
+		return "", err
+	}
+
+	// Encode the bytes to a base64 URL string
+	randomString := base64.URLEncoding.EncodeToString(randomBytes)
+
+	// Trim the string to the desired length
+	return randomString[:length], nil
 }
