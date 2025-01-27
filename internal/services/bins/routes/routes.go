@@ -67,15 +67,20 @@ func createBin(srv bins.Service, log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
 
-		newBin, err := utils.ReadJSON[models.NewBin](r)
+		newBin, err := utils.ReadJSON[models.NewBinRequest](r)
 		if err != nil {
 			utils.MustRespondError(w, http.StatusBadRequest, "couldn't parse bin")
 			return
 		}
 
+		if newBin.Expiration.Duration == 0*time.Second {
+			utils.MustRespondError(w, http.StatusBadRequest, "duration cannot be 0")
+			return
+		}
+
 		bin, err := srv.Create(ctx, newBin)
 		if err != nil {
-			log.Error("couldn't create bin")
+			log.Error("couldn't create bin", slog.String("err", err.Error()))
 			utils.MustRespondError(w, http.StatusInternalServerError, "couldn't create bin")
 			return
 		}
