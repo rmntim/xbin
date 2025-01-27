@@ -20,7 +20,7 @@ type Service struct {
 	repo repo.Repository
 }
 
-func NewService(ctx context.Context, log *slog.Logger, repo repo.Repository) bins.Service {
+func NewService(log *slog.Logger, repo repo.Repository) bins.Service {
 	return &Service{log: log, repo: repo}
 }
 
