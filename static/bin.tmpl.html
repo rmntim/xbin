@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>xbin</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@highlightjs/cdn-assets@11.9.0/styles/atom-one-dark.min.css"
+    />
+    <script src="https://unpkg.com/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html {
+        font-family: "JetBrains Mono", serif;
+      }
+
+      body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      main {
+        flex: 1;
+      }
+
+      footer {
+        display: flex;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <hgroup>
+          <h1>xbin 📋</h1>
+          <p>small pastebin site that allows people to share code</p>
+        </hgroup>
+        <ul>
+          <li><a href="#" data-theme-switcher="light">☀️</a></li>
+          <li><a href="#" data-theme-switcher="dark">🌙</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main>
+      <section id="code">
+        <pre><code>
+        {{ .Content }}
+      </code></pre>
+      </section>
+      <section
+        id="created-at"
+        style="display: flex; justify-content: center"
+      ></section>
+    </main>
+    <footer>
+      <small
+        >2025 made by rmntim |
+        <a href="https://github.com/rmntim/xbin" target="_blank"
+          >source</a
+        ></small
+      >
+    </footer>
+    <script>
+        document.querySelector("#created-at").innerHTML =
+          `<small>posted at: ${new Date({{ .CreatedAt | unix }}).toLocaleString()}</small>`;
+
+      (async ({ chrome, netscape }) => {
+        // add Safari polyfill if needed
+        if (!chrome && !netscape)
+          await import("https://unpkg.com/@ungap/custom-elements");
+
+        const { default: HighlightedCode } = await import(
+          "https://unpkg.com/highlighted-code"
+        );
+
+        const themeSwitcher = {
+          // Config
+          _scheme: "dark",
+          menuTarget: "details.dropdown",
+          buttonsTarget: "a[data-theme-switcher]",
+          buttonAttribute: "data-theme-switcher",
+          rootAttribute: "data-theme",
+          localStorageKey: "picoPreferredColorScheme",
+
+          // Init
+          init() {
+            this.scheme = this.schemeFromLocalStorage;
+            this.initSwitchers();
+          },
+
+          // Get color scheme from local storage
+          get schemeFromLocalStorage() {
+            return (
+              window.localStorage?.getItem(this.localStorageKey) ?? this._scheme
+            );
+          },
+
+          // Preferred color scheme
+          get preferredColorScheme() {
+            return window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+          },
+
+          // Init switchers
+          initSwitchers() {
+            const buttons = document.querySelectorAll(this.buttonsTarget);
+            buttons.forEach((button) => {
+              button.addEventListener(
+                "click",
+                (event) => {
+                  event.preventDefault();
+                  // Set scheme
+                  this.scheme = button.getAttribute(this.buttonAttribute);
+                  // Close dropdown
+                  document
+                    .querySelector(this.menuTarget)
+                    ?.removeAttribute("open");
+                },
+                false,
+              );
+            });
+          },
+
+          // Set scheme
+          set scheme(scheme) {
+            if (scheme == "auto") {
+              this._scheme = this.preferredColorScheme;
+            } else if (scheme == "dark" || scheme == "light") {
+              this._scheme = scheme;
+            }
+            this.applyScheme();
+            this.schemeToLocalStorage();
+          },
+
+          // Get scheme
+          get scheme() {
+            return this._scheme;
+          },
+
+          // Apply scheme
+          applyScheme() {
+            document
+              .querySelector("html")
+              ?.setAttribute(this.rootAttribute, this.scheme);
+            HighlightedCode.useTheme(
+              `github${this.scheme === "dark" ? "-dark" : ""}`,
+            );
+          },
+
+          // Store scheme to local storage
+          schemeToLocalStorage() {
+            window.localStorage?.setItem(this.localStorageKey, this.scheme);
+          },
+        };
+
+        // Init
+        themeSwitcher.init();
+      })(self);
+    </script>
+  </body>
+</html>

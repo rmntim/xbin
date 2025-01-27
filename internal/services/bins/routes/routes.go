@@ -3,14 +3,22 @@ package routes
 import (
 	"context"
 	"errors"
+	"html/template"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/rmntim/xbin/internal/services/bins"
 	binErr "github.com/rmntim/xbin/internal/services/bins/errors"
 	"github.com/rmntim/xbin/internal/services/bins/models"
 	"github.com/rmntim/xbin/internal/utils"
 )
+
+var funcs = template.FuncMap{
+	"unix": func(t time.Time) int64 {
+		return t.UnixMilli()
+	},
+}
 
 func Register(mux *http.ServeMux, log *slog.Logger, srv bins.Service) {
 	mux.Handle("GET /bin/{id}", getBin(srv, log))
@@ -40,7 +48,18 @@ func getBin(srv bins.Service, log *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		utils.MustRespondJSON(w, http.StatusOK, bin)
+		tmpl, err := template.New("bin.tmpl.html").Funcs(funcs).ParseFiles("./static/bin.tmpl.html")
+		if err != nil {
+			log.Error("couldn't parse template", slog.String("err", err.Error()))
+			utils.MustRespondError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+
+		if err = tmpl.Execute(w, bin); err != nil {
+			log.Error("couldn't execute template", slog.String("err", err.Error()))
+			utils.MustRespondError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
 	}
 }
 
