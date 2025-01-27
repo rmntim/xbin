@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 
 	"github.com/rmntim/xbin/internal/httpserver"
 	"github.com/rmntim/xbin/internal/repo/bins/sqlite"
@@ -93,10 +98,23 @@ func main() {
 
 	srv := httpserver.NewServer(fmt.Sprintf(":%d", cfg.Port), log, binSrv)
 
-	log.Info("listening", slog.String("address", srv.Addr))
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
-	if err := srv.ListenAndServe(); err != nil {
-		log.Error("error listening", slog.String("err", err.Error()))
-		os.Exit(1)
+	go func() {
+		log.Info("listening", slog.String("address", srv.Addr))
+
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Error("error listening", slog.String("err", err.Error()))
+			os.Exit(1)
+		}
+	}()
+
+	<-ctx.Done()
+	log.Info("got interruption signal")
+	if err := srv.Shutdown(context.TODO()); err != nil {
+		log.Error("server shutdown returned an err", slog.String("err", err.Error()))
 	}
+
+	log.Info("final")
 }
