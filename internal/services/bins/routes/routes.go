@@ -27,7 +27,7 @@ func Register(mux *http.ServeMux, log *slog.Logger, srv bins.Service) {
 
 func getBin(srv bins.Service, log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := context.Background()
+		ctx := r.Context()
 
 		id := r.PathValue("id")
 		if id == "" {
@@ -65,7 +65,7 @@ func getBin(srv bins.Service, log *slog.Logger) http.HandlerFunc {
 
 func createBin(srv bins.Service, log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := context.Background()
+		ctx := r.Context()
 
 		newBin, err := utils.ReadJSON[models.NewBinRequest](r)
 		if err != nil {
