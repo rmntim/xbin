@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"context"
 	"errors"
 	"html/template"
 	"log/slog"

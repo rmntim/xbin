@@ -6,15 +6,18 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	repo "github.com/rmntim/xbin/internal/repo/bins"
 	svcErr "github.com/rmntim/xbin/internal/services/bins/errors"
+	cr "github.com/robfig/cron/v3"
 )
 
 type repository struct {
-	log *slog.Logger
-	db  *sql.DB
+	log  *slog.Logger
+	db   *sql.DB
+	cron *cr.Cron
 }
 
 func NewRepository(log *slog.Logger, url string) (repo.Repository, error) {
@@ -23,10 +26,27 @@ func NewRepository(log *slog.Logger, url string) (repo.Repository, error) {
 		return nil, err
 	}
 
-	return &repository{
-		log: log,
-		db:  db,
-	}, nil
+	r := &repository{
+		log:  log,
+		db:   db,
+		cron: cr.New(),
+	}
+
+	_, err = r.cron.AddFunc("*/10 * * * *", r.deleteOldRows)
+	if err != nil {
+		return nil, err
+	}
+
+	r.deleteOldRows()
+
+	return r, nil
+}
+
+func (r *repository) deleteOldRows() {
+	_, err := r.db.Exec("DELETE FROM bins WHERE expires_at < ?", time.Now())
+	if err != nil {
+		r.log.Error("could not delete old bins", slog.String("err", err.Error()))
+	}
 }
 
 func (r *repository) Close() error {
