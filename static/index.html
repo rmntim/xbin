@@ -90,15 +90,23 @@
             event.preventDefault();
             const data = new FormData(event.target);
             const content = data.get("content");
-            const res = await fetch("/bin", {
-              method: "POST",
-              body: JSON.stringify({
-                content,
-              }),
-            });
+            try {
+              const res = await fetch("/bin", {
+                method: "POST",
+                body: JSON.stringify({
+                  content,
+                }),
+              });
 
-            const body = await res.json();
-            window.location.assign(`/bin/${body.id}`);
+              const body = await res.json();
+              if (typeof body.id === "string") {
+                window.location.assign(`/bin/${body.id}`);
+              } else {
+                throw new Error(body.message);
+              }
+            } catch (e) {
+              alert(`${e.message ?? "Unknown error"}`);
+            }
           });
 
         // add Safari polyfill if needed
