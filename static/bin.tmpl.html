@@ -6,7 +6,7 @@
     <title>xbin</title>
     <link
       rel="stylesheet"
-      href="https://unpkg.com/@highlightjs/cdn-assets@11.9.0/styles/atom-one-dark.min.css"
+      href="https://unpkg.com/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css"
     />
     <script src="https://unpkg.com/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
     <link
@@ -51,17 +51,11 @@
           <h1>xbin 📋</h1>
           <p>small pastebin site that allows people to share code</p>
         </hgroup>
-        <ul>
-          <li><a href="#" data-theme-switcher="light">☀️</a></li>
-          <li><a href="#" data-theme-switcher="dark">🌙</a></li>
-        </ul>
       </nav>
     </header>
     <main>
       <section id="code">
-        <pre><code>
-        {{ .Content }}
-      </code></pre>
+        <pre><code>{{ .Content }}</code></pre>
       </section>
       <section
         id="created-at"
@@ -77,102 +71,9 @@
       >
     </footer>
     <script>
-        document.querySelector("#created-at").innerHTML =
-          `<small>posted at: ${new Date({{ .CreatedAt | unix }}).toLocaleString()}</small>`;
-
-      (async ({ chrome, netscape }) => {
-        // add Safari polyfill if needed
-        if (!chrome && !netscape)
-          await import("https://unpkg.com/@ungap/custom-elements");
-
-        const { default: HighlightedCode } = await import(
-          "https://unpkg.com/highlighted-code"
-        );
-
-        const themeSwitcher = {
-          // Config
-          _scheme: "dark",
-          menuTarget: "details.dropdown",
-          buttonsTarget: "a[data-theme-switcher]",
-          buttonAttribute: "data-theme-switcher",
-          rootAttribute: "data-theme",
-          localStorageKey: "picoPreferredColorScheme",
-
-          // Init
-          init() {
-            this.scheme = this.schemeFromLocalStorage;
-            this.initSwitchers();
-          },
-
-          // Get color scheme from local storage
-          get schemeFromLocalStorage() {
-            return (
-              window.localStorage?.getItem(this.localStorageKey) ?? this._scheme
-            );
-          },
-
-          // Preferred color scheme
-          get preferredColorScheme() {
-            return window.matchMedia("(prefers-color-scheme: dark)").matches
-              ? "dark"
-              : "light";
-          },
-
-          // Init switchers
-          initSwitchers() {
-            const buttons = document.querySelectorAll(this.buttonsTarget);
-            buttons.forEach((button) => {
-              button.addEventListener(
-                "click",
-                (event) => {
-                  event.preventDefault();
-                  // Set scheme
-                  this.scheme = button.getAttribute(this.buttonAttribute);
-                  // Close dropdown
-                  document
-                    .querySelector(this.menuTarget)
-                    ?.removeAttribute("open");
-                },
-                false,
-              );
-            });
-          },
-
-          // Set scheme
-          set scheme(scheme) {
-            if (scheme == "auto") {
-              this._scheme = this.preferredColorScheme;
-            } else if (scheme == "dark" || scheme == "light") {
-              this._scheme = scheme;
-            }
-            this.applyScheme();
-            this.schemeToLocalStorage();
-          },
-
-          // Get scheme
-          get scheme() {
-            return this._scheme;
-          },
-
-          // Apply scheme
-          applyScheme() {
-            document
-              .querySelector("html")
-              ?.setAttribute(this.rootAttribute, this.scheme);
-            HighlightedCode.useTheme(
-              `github${this.scheme === "dark" ? "-dark" : ""}`,
-            );
-          },
-
-          // Store scheme to local storage
-          schemeToLocalStorage() {
-            window.localStorage?.setItem(this.localStorageKey, this.scheme);
-          },
-        };
-
-        // Init
-        themeSwitcher.init();
-      })(self);
+      document.querySelector("#created-at").innerHTML =
+        `<small>posted at: ${new Date({{ .CreatedAt | unix }}).toLocaleString()}</small>`;
+      hljs.highlightAll();
     </script>
   </body>
 </html>
