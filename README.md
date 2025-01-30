@@ -14,7 +14,7 @@ XBin is a simple Pastebin clone written in Go (Golang). It allows users to store
 
 ### Prerequisites
 
-- Go 1.16 or higher
+- Go 1.23 or higher
 - Git
 
 ### Steps
