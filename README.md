@@ -59,14 +59,14 @@ XBin is a simple Pastebin clone written in Go (Golang). It allows users to store
 - **Create a Paste**:
   - **Endpoint**: `POST /bin`
   - **Body**:
-    ```json
+    ```jsonc
     {
       "content": "Your text here",
       "expiration": "10m" // Optional: e.g., "10m", "1h", "24h"
     }
     ```
   - **Response**:
-    ```json
+    ```jsonc
     {
       "url": "http://localhost:8080/bin/abc123"
     }
