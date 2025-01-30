@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
 	"github.com/rmntim/xbin/internal/httpserver"
@@ -35,6 +36,16 @@ func configure() (Config, error) {
 
 	if *env != string(envDev) && *env != string(envProd) {
 		return Config{}, fmt.Errorf("invalid env value: %+v", *env)
+	}
+
+	portEnv, okPort := os.LookupEnv("PORT")
+	if okPort {
+		var err error
+
+		*port, err = strconv.ParseUint(portEnv, 10, 0)
+		if err != nil {
+			return Config{}, fmt.Errorf("invalid port value: %w", err)
+		}
 	}
 
 	if *port > math.MaxUint16 {
