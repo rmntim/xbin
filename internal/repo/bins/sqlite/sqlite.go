@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -56,7 +57,7 @@ func NewRepository(log *slog.Logger, url string, tursoConfig *TursoReplicaConfig
 		return nil, fmt.Errorf("error creating migration: %w", err)
 	}
 
-	if err := m.Up(); err != nil {
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return nil, fmt.Errorf("error running migrations: %w", err)
 	}
 

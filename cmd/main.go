@@ -27,7 +27,7 @@ type Config struct {
 func configure() (Config, error) {
 	var cfg Config
 
-	flag.StringVar(&cfg.StoragePath, "storagePath", "./bins.db", "path to storage")
+	flag.StringVar(&cfg.StoragePath, "storagePath", "./data/bins.db", "path to storage")
 	port := flag.Uint64("port", 8080, "port to listen on")
 	env := flag.String("env", string(envProd), "program environment (values: dev, prod)")
 

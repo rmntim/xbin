@@ -83,7 +83,7 @@ XBin is a simple Pastebin clone written in Go (Golang). It allows users to store
 XBin can be configured using environment variables:
 
 - `XBIN_PORT`: The port on which the application will run (default: `8080`).
-- `XBIN_STORAGE_PATH`: The directory where pastes will be stored (default: `./bins.db`).
+- `XBIN_STORAGE_PATH`: The directory where pastes will be stored (default: `./data/`).
 - `XBIN_ENV`: The environment of the application, either `dev` or `prod` (default: `prod`).
 
 Example:
