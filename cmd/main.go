@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"log/slog"
+	"math"
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 
 	"github.com/rmntim/xbin/internal/httpserver"
@@ -25,35 +26,22 @@ type Config struct {
 func configure() (Config, error) {
 	var cfg Config
 
-	port, ok := os.LookupEnv("XBIN_PORT")
-	if !ok {
-		cfg.Port = 8080
-	} else {
-		parsedPort, err := strconv.Atoi(port)
-		if err != nil {
-			return Config{}, fmt.Errorf("bad port value %s", port)
-		}
+	flag.StringVar(&cfg.StoragePath, "storagePath", "./bins.db", "path to storage")
+	port := flag.Uint64("port", 8080, "port to listen on")
+	env := flag.String("env", string(envProd), "program environment (values: dev, prod)")
 
-		cfg.Port = uint16(parsedPort)
+	flag.Parse()
+
+	if *env != string(envDev) && *env != string(envProd) {
+		return Config{}, fmt.Errorf("invalid env value: %+v", *env)
 	}
 
-	env, ok := os.LookupEnv("XBIN_ENV")
-	if !ok {
-		cfg.Env = envProd
-	} else {
-		if env != string(envProd) && env != string(envDev) {
-			return Config{}, fmt.Errorf("invalid env")
-		}
-
-		cfg.Env = loggerEnv(env)
+	if *port > math.MaxUint16 {
+		return Config{}, fmt.Errorf("invalid port value: %+v", *port)
 	}
 
-	storagePath, ok := os.LookupEnv("XBIN_STORAGE_PATH")
-	if !ok {
-		cfg.StoragePath = "./bins.db"
-	} else {
-		cfg.StoragePath = storagePath
-	}
+	cfg.Port = uint16(*port)
+	cfg.Env = loggerEnv(*env)
 
 	return cfg, nil
 }
