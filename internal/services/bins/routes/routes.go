@@ -22,6 +22,9 @@ var funcs = template.FuncMap{
 func Register(mux *http.ServeMux, log *slog.Logger, srv bins.Service) {
 	mux.Handle("GET /bin/{slug}", getBin(srv, log))
 	mux.Handle("POST /bin", createBin(srv, log))
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
+		utils.MustRespondJSON(w, http.StatusOK, struct{ Status string }{Status: "OK"})
+	})
 }
 
 func getBin(srv bins.Service, log *slog.Logger) http.HandlerFunc {
