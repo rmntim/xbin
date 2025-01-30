@@ -11,6 +11,7 @@ type Bin struct {
 	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"created_at"`
 	ExpiresAt time.Time `json:"expires_at"`
+	Slug      string    `json:"slug"`
 }
 
 type Duration struct {
@@ -49,6 +50,5 @@ type NewBinRequest struct {
 }
 
 type NewBinResponse struct {
-	Id  string `json:"id"`
 	URL string `json:"url"`
 }

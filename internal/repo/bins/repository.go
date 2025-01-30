@@ -5,7 +5,7 @@ import (
 )
 
 type Repository interface {
-	Get(ctx context.Context, id string) (BinStorage, error)
+	GetBySlug(ctx context.Context, slug string) (BinStorage, error)
 	Create(ctx context.Context, newBin BinStorage) (string, error)
 	Close() error
 }

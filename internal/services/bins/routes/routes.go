@@ -20,7 +20,7 @@ var funcs = template.FuncMap{
 }
 
 func Register(mux *http.ServeMux, log *slog.Logger, srv bins.Service) {
-	mux.Handle("GET /bin/{id}", getBin(srv, log))
+	mux.Handle("GET /bin/{slug}", getBin(srv, log))
 	mux.Handle("POST /bin", createBin(srv, log))
 }
 
@@ -28,15 +28,15 @@ func getBin(srv bins.Service, log *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		id := r.PathValue("id")
-		if id == "" {
-			utils.MustRespondError(w, http.StatusBadRequest, "id not provided")
+		slug := r.PathValue("slug")
+		if slug == "" {
+			utils.MustRespondError(w, http.StatusBadRequest, "slug not provided")
 			return
 		}
 
-		log = log.With(slog.String("id", id))
+		log = log.With(slog.String("slug", slug))
 
-		bin, err := srv.Get(ctx, id)
+		bin, err := srv.GetBySlug(ctx, slug)
 		if err != nil {
 			if errors.Is(err, binErr.ErrNotFound) || errors.Is(err, binErr.ErrExpired) {
 				utils.MustRespondError(w, http.StatusNotFound, "bin not found")

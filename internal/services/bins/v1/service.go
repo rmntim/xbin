@@ -10,11 +10,14 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/google/uuid"
 	repo "github.com/rmntim/xbin/internal/repo/bins"
 	"github.com/rmntim/xbin/internal/services/bins"
 	svcErr "github.com/rmntim/xbin/internal/services/bins/errors"
 	"github.com/rmntim/xbin/internal/services/bins/models"
 )
+
+const slugLength = 8
 
 type Service struct {
 	log  *slog.Logger
@@ -25,17 +28,17 @@ func NewService(log *slog.Logger, repo repo.Repository) bins.Service {
 	return &Service{log: log, repo: repo}
 }
 
-func (s *Service) Get(ctx context.Context, id string) (models.Bin, error) {
-	log := s.log.With(slog.String("id", id))
+func (s *Service) GetBySlug(ctx context.Context, slug string) (models.Bin, error) {
+	log := s.log.With(slog.String("slug", slug))
 
-	bin, err := s.repo.Get(ctx, id)
+	bin, err := s.repo.GetBySlug(ctx, slug)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.Bin{}, svcErr.ErrNotFound
 		}
 
 		log.Error("could not get bin", slog.String("err", err.Error()))
-		return models.Bin{}, fmt.Errorf("could not get bin with id %s", id)
+		return models.Bin{}, fmt.Errorf("could not get bin with slug %s", slug)
 	}
 
 	log.Debug("bin found")
@@ -58,24 +61,28 @@ func (s *Service) Create(ctx context.Context, newBin models.NewBinRequest) (mode
 		return models.NewBinResponse{}, fmt.Errorf("could not convert service to storage bin: %w", err)
 	}
 
-	id, err := s.repo.Create(ctx, storageBin)
+	slug, err := s.repo.Create(ctx, storageBin)
 	if err != nil {
 		s.log.Error("could not create bin", slog.String("err", err.Error()))
 		return models.NewBinResponse{}, fmt.Errorf("could not create bin: %w", err)
 	}
 
 	bin := models.NewBinResponse{
-		Id:  id,
-		URL: fmt.Sprintf("/bin/%s", id),
+		URL: fmt.Sprintf("/bin/%s", slug),
 	}
 
-	s.log.Debug("successfully created bin", slog.String("id", bin.Id))
+	s.log.Debug("successfully created bin", slog.String("slug", slug))
 
 	return bin, nil
 }
 
 func svcToStorageBin(bin models.NewBinRequest) (repo.BinStorage, error) {
-	id, err := generateRandomString(8)
+	slug, err := generateRandomString(slugLength)
+	if err != nil {
+		return repo.BinStorage{}, fmt.Errorf("error creating slug: %w", err)
+	}
+
+	id, err := uuid.NewRandom()
 	if err != nil {
 		return repo.BinStorage{}, fmt.Errorf("error creating uuid: %w", err)
 	}
@@ -83,10 +90,11 @@ func svcToStorageBin(bin models.NewBinRequest) (repo.BinStorage, error) {
 	now := time.Now()
 
 	return repo.BinStorage{
-		Id:        id,
+		Id:        id.String(),
 		Content:   bin.Content,
 		CreatedAt: now,
 		ExpiresAt: now.Add(bin.Expiration.Duration),
+		Slug:      slug,
 	}, nil
 }
 

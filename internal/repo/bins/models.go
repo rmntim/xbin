@@ -7,4 +7,5 @@ type BinStorage struct {
 	Content   string
 	CreatedAt time.Time
 	ExpiresAt time.Time
+	Slug      string
 }

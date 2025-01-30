@@ -7,6 +7,6 @@ import (
 )
 
 type Service interface {
-	Get(ctx context.Context, id string) (models.Bin, error)
+	GetBySlug(ctx context.Context, slug string) (models.Bin, error)
 	Create(ctx context.Context, content models.NewBinRequest) (models.NewBinResponse, error)
 }
