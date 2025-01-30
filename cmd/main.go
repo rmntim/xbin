@@ -21,6 +21,7 @@ type Config struct {
 	Port        uint16
 	Env         loggerEnv
 	StoragePath string
+	TursoCfg    *sqlite.TursoReplicaConfig
 }
 
 func configure() (Config, error) {
@@ -42,6 +43,17 @@ func configure() (Config, error) {
 
 	cfg.Port = uint16(*port)
 	cfg.Env = loggerEnv(*env)
+
+	tursoUrl, okUrl := os.LookupEnv("TURSO_URL")
+	token, okToken := os.LookupEnv("TURSO_TOKEN")
+	ok := okUrl && okToken
+
+	if ok {
+		cfg.TursoCfg = &sqlite.TursoReplicaConfig{
+			AuthToken: token,
+			URL:       tursoUrl,
+		}
+	}
 
 	return cfg, nil
 }
@@ -75,7 +87,7 @@ func main() {
 
 	log := setupLogger(cfg.Env)
 
-	db, err := sqlite.NewRepository(log, cfg.StoragePath)
+	db, err := sqlite.NewRepository(log, cfg.StoragePath, cfg.TursoCfg)
 	if err != nil {
 		log.Error("error creating database connection", slog.String("err", err.Error()))
 		os.Exit(1)

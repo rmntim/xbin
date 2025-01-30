@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"log/slog"
 
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/sqlite"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	repo "github.com/rmntim/xbin/internal/repo/bins"
+	"github.com/tursodatabase/go-libsql"
 )
 
 type repository struct {
@@ -15,10 +18,46 @@ type repository struct {
 	db  *sql.DB
 }
 
-func NewRepository(log *slog.Logger, url string) (repo.Repository, error) {
-	db, err := sql.Open("sqlite3", url)
+type TursoReplicaConfig struct {
+	URL       string
+	AuthToken string
+}
+
+func NewRepository(log *slog.Logger, url string, tursoConfig *TursoReplicaConfig) (repo.Repository, error) {
+	var db *sql.DB
+
+	if tursoConfig != nil {
+		connector, err := libsql.NewEmbeddedReplicaConnector(url, tursoConfig.URL, libsql.WithAuthToken(tursoConfig.AuthToken))
+		if err != nil {
+			return nil, fmt.Errorf("error creating connector: %w", err)
+		}
+
+		log.Debug("connecting to turso")
+
+		db = sql.OpenDB(connector)
+	} else {
+		log.Debug("connecting to local db")
+
+		dbLocal, err := sql.Open("libsql", "file:"+url)
+		if err != nil {
+			return nil, fmt.Errorf("error creating local db: %w", err)
+		}
+
+		db = dbLocal
+	}
+
+	driver, err := sqlite.WithInstance(db, &sqlite.Config{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating migration driver: %w", err)
+	}
+
+	m, err := migrate.NewWithDatabaseInstance("file://./migrations", "sqlite", driver)
+	if err != nil {
+		return nil, fmt.Errorf("error creating migration: %w", err)
+	}
+
+	if err := m.Up(); err != nil {
+		return nil, fmt.Errorf("error running migrations: %w", err)
 	}
 
 	r := &repository{
