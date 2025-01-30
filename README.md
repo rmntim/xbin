@@ -68,30 +68,31 @@ XBin is a simple Pastebin clone written in Go (Golang). It allows users to store
   - **Response**:
     ```json
     {
-      "id": "abc123",
       "url": "http://localhost:8080/bin/abc123"
     }
     ```
 
 - **Read a Paste**:
-  - **Endpoint**: `GET /bin/{id}`
+  - **Endpoint**: `GET /bin/{slug}`
   - **Response**:
     A HTML page with your code.
 
 ## Configuration
 
-XBin can be configured using environment variables:
+XBin can be configured using command-line flags:
 
-- `XBIN_PORT`: The port on which the application will run (default: `8080`).
-- `XBIN_STORAGE_PATH`: The directory where pastes will be stored (default: `./data/`).
-- `XBIN_ENV`: The environment of the application, either `dev` or `prod` (default: `prod`).
+- `-port`: The port on which the application will run (default: `8080`).
+- `-storagePath`: The directory where pastes will be stored (default: `./data/bins.db`).
+- `-env`: The environment of the application, either `dev` or `prod` (default: `prod`).
+
+Also [Turso](https://turso.tech) may be used as a database replica provider.
+Specify both `TUSRO_TOKEN` and `TUSRO_URL` environment variables to enable this feature.
+An example `.env` file is provided.
 
 Example:
 
 ```bash
-export XBIN_PORT=3000
-export XBIN_STORAGE_PATH=/var/lib/xbin
-./xbin
+./xbin -port 3000 -env dev
 ```
 
 ## Contributing
@@ -105,3 +106,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Acknowledgments
 
 - Inspired by [Pastebin](https://pastebin.com).
+- Uses [go-libsql](https://github.com/tursodatabase/go-libsql) as database driver.
