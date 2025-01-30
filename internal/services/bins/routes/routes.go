@@ -38,8 +38,8 @@ func getBin(srv bins.Service, log *slog.Logger) http.HandlerFunc {
 
 		bin, err := srv.Get(ctx, id)
 		if err != nil {
-			if errors.Is(err, binErr.ErrNotFound) {
-				utils.MustRespondError(w, http.StatusNotFound, err.Error())
+			if errors.Is(err, binErr.ErrNotFound) || errors.Is(err, binErr.ErrExpired) {
+				utils.MustRespondError(w, http.StatusNotFound, "bin not found")
 			} else {
 				log.Error("couldn't get bin", slog.String("err", err.Error()))
 				utils.MustRespondError(w, http.StatusInternalServerError, "couldn't get bin")

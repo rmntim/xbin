@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"crypto/rand"
+	"database/sql"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -29,8 +30,8 @@ func (s *Service) Get(ctx context.Context, id string) (models.Bin, error) {
 
 	bin, err := s.repo.Get(ctx, id)
 	if err != nil {
-		if errors.Is(err, svcErr.ErrNotFound) {
-			return models.Bin{}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.Bin{}, svcErr.ErrNotFound
 		}
 
 		log.Error("could not get bin", slog.String("err", err.Error()))
@@ -38,6 +39,10 @@ func (s *Service) Get(ctx context.Context, id string) (models.Bin, error) {
 	}
 
 	log.Debug("bin found")
+
+	if bin.ExpiresAt.Before(time.Now()) {
+		return models.Bin{}, svcErr.ErrExpired
+	}
 
 	return models.Bin{
 		Id:        bin.Id,
